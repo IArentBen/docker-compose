@@ -1,0 +1,553 @@
+version: "3.7"
+#Networks
+networks:
+  gitea:
+  t2_proxy:
+    external:
+      name: t2_proxy
+  default:
+    driver: bridge  
+#SERVICES
+services:
+#TRAEFIK
+  traefik:
+    container_name: traefik
+    image: traefik:2.2.1 # the chevrotin tag refers to v2.2.x but introduced a breaking change in 2.2.2
+    restart: ${restart}
+    command: # CLI arguments
+     - --global.checkNewVersion=true
+     - --global.sendAnonymousUsage=true
+     - --entryPoints.http.address=:80
+     - --entryPoints.https.address=:443
+       # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
+     - --entrypoints.https.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/12,172.64.0.0/13,131.0.72.0/22
+     - --entryPoints.traefik.address=:8080
+     - --api=true
+    #     - --api.insecure=true
+    #     - --serversTransport.insecureSkipVerify=true
+     - --log=true
+     - --log.level=DEBUG # (Default: error) DEBUG, INFO, WARN, ERROR, FATAL, PANIC
+     - --accessLog=true
+     - --accessLog.filePath=/traefik.log
+     - --accessLog.bufferingSize=100 # Configuring a buffer of 100 lines
+     - --accessLog.filters.statusCodes=400-499
+     - --providers.docker=true
+     - --providers.docker.endpoint=unix:///var/run/docker.sock
+     - --providers.docker.defaultrule=Host(`{{ index .Labels "com.docker.compose.service" }}.$DOMAINNAME`)
+     - --providers.docker.exposedByDefault=false
+     - --providers.docker.network=t2_proxy
+     - --providers.docker.swarmMode=false
+     - --providers.file.directory=/rules # Load dynamic configuration from one or more .toml or .yml files in a directory.
+    #     - --providers.file.filename=/path/to/file # Load dynamic configuration from a file.
+     - --providers.file.watch=true # Only works on top level files in the rules folder
+     - --certificatesResolvers.dns-cloudflare.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory # LetsEncrypt Staging Server - uncomment when testing
+     - --certificatesResolvers.dns-cloudflare.acme.email=$CLOUDFLARE_EMAIL
+     - --certificatesResolvers.dns-cloudflare.acme.storage=/acme.json
+     - --certificatesResolvers.dns-cloudflare.acme.dnsChallenge.provider=cloudflare
+    #    networks:
+    #      t2_proxy:
+    #        ipv4_address: 192.168.1.253 # You can specify a static IP
+    networks:
+      - t2_proxy
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+    volumes:
+      - $appdata/traefik2/rules:/rules 
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - $appdata/traefik2/acme/acme.json:/acme.json 
+      - $appdata/traefik2/traefik.log:/traefik.log 
+      - $appdata/shared:/shared
+    environment:
+      - CF_API_EMAIL=$CLOUDFLARE_EMAIL
+      - CF_API_KEY=$CLOUDFLARE_API_KEY
+    labels:
+      - "traefik.enable=true"
+      # HTTP-to-HTTPS Redirect
+      - "traefik.http.routers.http-catchall.entrypoints=http"
+      - "traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      # HTTP Routers
+      - "traefik.http.routers.traefik-rtr.entrypoints=https"
+      - "traefik.http.routers.traefik-rtr.rule=Host(`traefik.$DOMAINNAME`)"
+      - "traefik.http.routers.traefik-rtr.tls=true"
+      - "traefik.http.routers.traefik-rtr.tls.certresolver=dns-cloudflare" # Comment out this line after first run of traefik to force the use of wildcard certs
+      - "traefik.http.routers.traefik-rtr.tls.domains[0].main=$DOMAINNAME"
+      - "traefik.http.routers.traefik-rtr.tls.domains[0].sans=*.$DOMAINNAME"
+    #      - "traefik.http.routers.traefik-rtr.tls.domains[1].main=$SECONDDOMAINNAME" # Pulls main cert for second domain
+    #      - "traefik.http.routers.traefik-rtr.tls.domains[1].sans=*.$SECONDDOMAINNAME" # Pulls wildcard cert for second domain
+      ## Services - API
+      - "traefik.http.routers.traefik-rtr.service=api@internal"                           
+#Torrent+VPN
+  transmission-openvpn:
+    image: haugene/transmission-openvpn:latest
+    container_name: torrent
+    environment:
+      - TRANSMISSION_WEB_UI=transmission-web-control
+      - PGID=${id-group}
+      - PUID=${id-user}
+      - CREATE_TUN_DEVICE=true
+      - OPENVPN_PROVIDER=MULLVAD
+      - OPENVPN_CONFIG=ca_all
+      - OPENVPN_USERNAME=${passwd-keyforvpn}
+      - OPENVPN_PASSWORD=${passwd-keyforvpn}
+      - WEBPROXY_ENABLED=false
+      - LOCAL_NETWORK=192.168.1.0/24
+      - dns=1.1.1.1
+    volumes:
+      - ${torrent}:/data
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - ${Port-transmission-openvpn}:9091
+      - ${Port-YoutubeDL}:17442
+      - ${Port-firefox}:5800
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    cap_add:
+      - NET_ADMIN
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+    restart: ${restart}    
+#code
+  code-server:
+     image: linuxserver/code-server
+     container_name: codeserver
+     environment:
+       - PUID=${id-user}
+       - PGID=${id-group}
+       - TZ=${TZ}
+       - PASSWORD=${passwd-code-user}
+       - SUDO_PASSWORD=${passwd-code-root}
+     volumes:
+       - ${appdata}/code:/config
+       - /home/docker:/Files:rw
+     ports:
+       - ${Port-Code}:8443
+     restart: ${restart}
+#streaming
+  plex:
+    image: linuxserver/plex
+    container_name: plex
+    environment:
+      - PUID=${id-user}
+      - PGID=${id-group}
+      - VERSION=docker
+      - VERSION=latest
+      - VIRTUAL_PORT=32400 
+    volumes:
+      - ${appdata}/plex:/config 
+      - ${tv}:/tv 
+      - ${movies}:/movies  
+      - ${music}:/music 
+      - ${sleep}:/sleep 
+      - ${bentube}:/bentube
+      - ${podcasts}:/podcasts
+      - ${kidmovies}:/kidmovie
+      - ${kidmusic}:/kidmusic
+      - ${kidtv}:/kidtv
+      - ${kidtube}:/kidtube
+      - ${alltube}:/alltube
+      - ${xmasspecial}:/Xmas  
+    network_mode: host
+    restart: ${restart}
+#Cloud Service
+  nextcloud:
+    image: linuxserver/nextcloud
+    container_name: Nextcloud
+    environment:
+      - PUID=${id-user}
+      - PGID=${id-group}
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/nextcloud:/config
+      - ${db}/nextcloud:/data
+    ports:
+      - ${cloud}:443
+    restart: ${restart}
+#Selfhosted Git
+  Gitserver:
+    image: gitea/gitea:latest
+    container_name: Gitea
+    #user: ${gituser}
+    environment: 
+    - USER_UID=${id-user}
+    - USER_GID=${id-group}
+    volumes:
+      - ${appdata}/gitea/data:/data
+      - ${appdata}/gitea/config:/etc/gitea
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - ${Port-git}:3000
+      - ${Port-git-ssh}:2222
+    networks:
+      - gitea
+    restart: ${restart}
+#Movie meta data
+  TMM:
+    image: romancin/tinymediamanager:latest
+    container_name: T.M.M.
+    environment:
+      - USER_ID=${id-user}
+      - GROUP_ID=${id-group}
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/tinymediamanager:/config
+      - ${torrent}:/media/downloads
+      - ${media}/unsorted:/media/finished
+ #      - ${movies}:/media/movies
+ #      - ${tv}:/media/tv    
+    ports:
+      - ${Port-tmm}:5800
+    restart: ${restart}     
+#Portainer
+  portainer:
+    image: portainer/portainer
+    container_name: Portainer
+ #    command: -H unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${appdata}/portainer_data:/data 
+    ports:
+      - ${Port-portainer-web}:9000
+      - ${Port-portainer-alt}:8000    
+    restart: ${restart}
+#WIKI     
+  bookstack:
+    image: linuxserver/bookstack
+    container_name: bookstack
+    environment:
+      - PUID=${id-user}
+      - PGID=${id-group}
+      - DB_HOST=${ip-local}:${Port-wiki-DB}
+      - DB_USER=admin
+      - DB_PASS=${passwd-norm-user}
+      - DB_DATABASE=bookstackapp
+      - APP_URL=https://wiki.${domain}
+    volumes:
+      - ${appdata}/bookstack:/config
+    ports:
+      - ${stackapp}:80
+    restart: ${restart} 
+    depends_on:
+      - bookstack_db
+ #Bookstack MARIADB
+  bookstack_db:
+    image: linuxserver/mariadb
+    container_name: bookstackdb
+    environment:
+      - PUID=${id-user}
+      - PGID=${id-group}
+      - SQL_ROOT_PASSWORD=${passwd-norm-root}
+      - TZ=${TZ}
+      - MYSQL_DATABASE=bookstackapp
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=${passwd-norm-user}
+    volumes:
+      - ${db}/bookstack:/config
+    ports:
+      - ${Port-wiki}:3306
+    restart: ${restart}
+#tube download
+  YTDL:
+    image: tzahi12345/youtubedl-material:nightly
+    container_name: Y.T.D.L.
+    network_mode: "service:transmission-openvpn"
+    environment:
+      ALLOW_CONFIG_MUTATIONS: 'true'
+      UID: ${id-user}
+      GID: ${id-group}
+    volumes:
+      - ${appdata}/ytdl_material:/app/appdata
+      - ${alltube}/audio:/app/audio
+      - ${alltube}/video:/app/video
+      - ${alltube}/subscriptions:/app/subscriptions
+      - ${bentube}:/app/users/ben
+      - ${kidtube}:/app/users/kid
+  # Ports are published on Haugene service 
+  #  ports:
+  #    - "${tube1}:17442"
+    restart: ${restart}
+# HandBrake      
+  #handbrake:
+    # image: jlesage/handbrake
+    # container_name: HandBrake
+    # build:
+      # context: ${dockerfile}docker-handbrake
+      # dockerfile: Dockerfile
+    # environment:
+      # - AUTOMATED_CONVERSION_PRESET=Matrosky/H.264 MKV 720p30 25
+      # - AUTOMATED_CONVERSION_PRESET_2=Matrosky/H.264 MKV 1080p30 25
+      # - AUTOMATED_CONVERSION_PRESET_3=Matroska/H.264 MKV 2160p30
+      # - SECURE_CONNECTION=1
+      # - KEEP_APP_RUNNING=1
+      # - DISPLAY_WIDTH=1280
+      # - DISPLAY_HEIGHT=720
+      # - TZ=${TZ} 
+      # - PUID=${id-user}
+      # - PGID=${id-group}
+    # volumes:
+      # - "${appdata}/HandBrake:/config:rw"
+      # - "${root}:/storage:ro"
+      # - "${root}/HandBrake/watch720:/watch:rw"
+      # - "${root}/HandBrake/watch1080:/watch2:rw"
+      # - "${root}/HandBrake/watch2160:/watch3:rw"
+      # - "${root}/HandBrake/output:/output:rw"
+    # ports:
+      # - "${hand}:5800"
+    # restart: ${restart}
+#Minecraft
+  minecraft:
+    image: itzg/minecraft-server:java8
+    container_name: mc
+    ports:
+      - "25565:25565"
+    volumes:
+      - ${appdata}/minecraft/server:/data
+      - ${appdata}/minecraft/modpacks:/modpacks:ro
+    environment:
+      - UID=${id-user}
+      - GID=${id-group}
+      - EULA=TRUE
+      - MEMORY=6G 
+      - REPLACE_ENV_VARIABLES=TRUE
+      - ENABLE_AUTOPAUSE=TRUE
+      - OVERRIDE_SERVER_PROPERTIES=TRUE
+      - MAX_TICK_TIME=-1 
+      - TYPE=CURSEFORGE 
+      - CF_SERVER_MOD=/modpacks/FarmingValleyServer_100.zip 
+      - USE_MODPACK_START_SCRIPT=false
+      - DIFFICULTY=normal
+      - OPS=IArentBen,SelfwareSoap
+      - ALLOW_NETHER=true
+      - ENABLE_COMMAND_BLOCK=true
+      - SEED=GraceDad
+      - ENV_VARIABLE_PREFIX="CFG_"
+    tty: "true"
+    stdin_open: true
+    restart: ${restart}
+#PODCAST
+  podgrab:
+    image: akhilrex/podgrab
+    container_name: PodGrab
+    environment:
+      - CHECK_FREQUENCY=240
+      - PASSWORD=${passwd-norm-user}     
+ #      - username = podgrab
+    volumes:
+      - ${appdata}/podcast:/config
+      - ${podcasts}:/assets
+    ports:
+      - ${Port-podcast}:8080
+    restart: ${restart}
+#Browser
+  firefox:
+    image: jlesage/firefox
+    container_name: firefox
+    build:
+      context: ${dockerfile}docker-firefox
+      dockerfile: Dockerfile
+    network_mode: "service:transmission-openvpn"
+ #   ports:
+ #     - "5800:5800"
+    environment:
+      - USER_ID:${id-user}
+      - GROUP_ID:${id-group}
+    volumes:
+      - ${appdata}/firefox:/config:rw
+      - ${torrent}/watch:/config/downloads:rw
+##DDCLIENT
+  ddclient:
+    image: ghcr.io/linuxserver/ddclient
+    container_name: ddclient
+    environment:
+      - PUID=${id-user}
+      - PGID=${id-group}
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/ddclient:/config
+    restart: ${restart}
+##PICARD    
+  picard:
+    container_name: picard
+    build:
+      context: ${dockerfile}docker-picard
+      dockerfile: Dockerfile
+    environment:
+      - KEEP_APP_RUNNING=1
+      - USER_ID=${id-user}
+      - GROUP_ID=${id-group}
+      - TZ=${TZ}
+    ports:
+      - "${Port-picard}:5800"
+    volumes:
+      - "${appdata}/picard:/config:rw"
+      - "${torrent}/completed:/storage/sort:rw"
+      - "${media}/music:/storage/music:rw"
+      - "${media}/kidmusic:/storage/kidsmusic:rw"
+#organizr
+  organizr:
+    container_name: organizr
+    hostname: organizr
+    image: organizr/organizr:latest
+    restart: ${restart}
+    ports:
+      - ${Port-organizr}:80
+    volumes:
+      - ${appdata}/organizr:/config
+    environment:
+      - PUID=${id-user}
+      - PGID=${id-group}
+      - TZ=${TZ}
+###media
+#Sonarr      
+  sonarr:
+    image: ghcr.io/linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=${id-user}
+      - PUID=${id-group}
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/sonarr:/config
+      - ${tv}:/tv/oldertv
+      - ${kidtv}:/tv/kidstv
+      - ${torrent}:/downloads
+    ports:
+      - 8989:8989
+    restart: ${restart}
+#Readarr
+  readarr:
+    container_name: readarr
+    image: hotio/readarr
+    ports:
+      - ${Port-readarr}:8787
+    environment:
+      - PUID=${id-user}
+      - PUID=${id-group}
+      - UMASK=002
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/readarr:/config
+      - ${books}:/done
+# Bazarr      
+  bazarr:
+    image: ghcr.io/linuxserver/bazarr
+    container_name: bazarr
+    environment:
+      - PUID=${id-user}
+      - PUID=${id-group}
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/bazarr:/config
+      - ${movies}:/movies #optional
+      - ${tv}:/tv #optional
+      - ${kidmovies}:/kidmovies #optional
+      - ${kidtv}:/kidtv #optional
+    ports:
+      - ${Port-bazarr}:6767
+    restart: ${restart}
+##gaps
+gaps:
+  image: housewrecker/gaps:latest
+  container_name: gaps
+  environment:
+    - PGID=${PGID}
+    - PUID=${PUID}
+    - TZ=${TZ}
+  ports:
+    - ${Port-gaps}:8484
+  restart: ${restart}
+  expose:
+    - "32400"
+  volumes:
+    - /etc/localtime:/etc/localtime:ro
+#lidarr
+  lidarr:
+    image: ghcr.io/linuxserver/lidarr
+    container_name: lidarr
+    environment:
+      - PUID=${id-user}
+      - PUID=${id-group}
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/lidarr:/config
+      - ${music}:/music/oldermusic
+      - ${kidmusic}:/music/kidmusic
+      - ${torrent}:/downloads
+    ports:
+      - ${lidarr}:8686
+    restart: ${restart}
+##tdarr
+  tdarr:
+    container_name: tdarr
+    image: haveagitgat/tdarr:latest
+    restart: ${restart}
+    network_mode: bridge
+    ports:
+      - ${Port-tdarr-web}:8265 # webUI port
+      - ${Port-tdarr-server}:8266 # server port
+      - ${Port-tdarr-node}:8267 # node port. It should be mapped on this container because
+                  # the node container use the network from the main container
+    environment:
+      - TZ=${TZ}
+      - PUID=${id-user}
+      - PGID=${id-group}
+      - UMASK_SET=002
+      - serverIP=${ip-local}
+      - serverPort=${Port-tdarr-server}
+      - webUIPort=${Port-tdarr-web}
+    volumes:
+      - ${appdata}/tdarr/server:/app/server
+      - ${appdata}/tdarr/config:/app/configs
+      - ${appdata}/tdarr/logs:/app/logs
+      - ${media}:/media
+
+  tdarr-node:
+    container_name: tdarr-node
+    image: haveagitgat/tdarr_node:latest
+    restart: ${restart}
+    network_mode: service:tdarr
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK_SET=002
+      - nodeID=MainNode
+      - nodeIP=${ip-local}
+      - nodePort=${Port-tdarr-node}
+      - serverIP=${ip-local}
+      - serverPort=${Port-tdarr-server}
+    volumes:
+      - ${appdata}/tdarr/config:/app/configs
+      - ${appdata}/tdarr/logs:/app/logs
+      - ${media}:/media
+###utilities
+#darktable
+  darktable:
+    image: ghcr.io/linuxserver/darktable
+    container_name: darktable
+    environment:
+      - PUID=${id-user}
+      - PUID=${id-group}
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/darktable:/config
+    ports:
+      - ${Port-darktable}:3000
+    restart: ${restart}
