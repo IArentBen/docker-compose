@@ -101,7 +101,7 @@ services:
           - "${Port_pihole}:80/tcp"
       environment:
         TZ: ${TZ}
-        WEBPASSWORD: ${passwd-code-user}
+        WEBPASSWORD: ${passwd_code_user}
         ADMIN_EMAIL: ${email_server}
         ADMIN_EMAIL: 1.1.1.1,8.8.8.8
         # Volumes store your data between container upgrades
@@ -118,9 +118,9 @@ services:
     image: haugene/transmission-openvpn:latest
     container_name: torrent
     environment:
-      - TRANSMISSION_WEB_UI=transmission-web-control
-      - PGID=${id-group}
-      - PUID=${id-user}
+      - TRANSMISSION_WEB_UI=transmission_web_control
+      - PGID=${id_group}
+      - PUID=${id_user}
       - CREATE_TUN_DEVICE=true
       - OPENVPN_PROVIDER=MULLVAD
       - OPENVPN_CONFIG=ca_all
@@ -133,9 +133,9 @@ services:
       - ${torrent}:/data
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - ${Port-transmission-openvpn}:9091
-      - ${Port-YoutubeDL}:17442
-      - ${Port-firefox}:5800
+      - ${Port_transmission-openvpn}:9091
+      - ${Port_YoutubeDL}:17442
+      - ${Port_firefox}:5800
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
     cap_add:
@@ -150,24 +150,24 @@ services:
      image: linuxserver/code-server
      container_name: codeserver
      environment:
-       - PUID=${id-user}
-       - PGID=${id-group}
+       - PUID=${id_user}
+       - PGID=${id_group}
        - TZ=${TZ}
-       - PASSWORD=${passwd-code-user}
-       - SUDO_PASSWORD=${passwd-code-root}
+       - PASSWORD=${passwd_code_user}
+       - SUDO_PASSWORD=${passwd_code_root}
      volumes:
        - ${appdata}/code:/config
        - /home/docker:/Files:rw
      ports:
-       - ${Port-Code}:8443
+       - ${Port_Code}:8443
      restart: ${restart}
 #streaming
   plex:
     image: linuxserver/plex
     container_name: plex
     environment:
-      - PUID=${id-user}
-      - PGID=${id-group}
+      - PUID=${id_user}
+      - PGID=${id_group}
       - VERSION=docker
       - VERSION=latest
       - VIRTUAL_PORT=32400 
@@ -192,8 +192,8 @@ services:
     image: linuxserver/nextcloud
     container_name: Nextcloud
     environment:
-      - PUID=${id-user}
-      - PGID=${id-group}
+      - PUID=${id_user}
+      - PGID=${id_group}
       - TZ=${TZ}
     volumes:
       - ${appdata}/nextcloud:/config
@@ -207,16 +207,16 @@ services:
     container_name: Gitea
     #user: ${gituser}
     environment: 
-    - USER_UID=${id-user}
-    - USER_GID=${id-group}
+    - USER_UID=${id_user}
+    - USER_GID=${id_group}
     volumes:
       - ${appdata}/gitea/data:/data
       - ${appdata}/gitea/config:/etc/gitea
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - ${Port-git}:3000
-      - ${Port-git-ssh}:2222
+      - ${Port_git}:3000
+      - ${Port_git_ssh}:2222
     networks:
       - gitea
     restart: ${restart}
@@ -225,8 +225,8 @@ services:
     image: romancin/tinymediamanager:latest
     container_name: T.M.M.
     environment:
-      - USER_ID=${id-user}
-      - GROUP_ID=${id-group}
+      - USER_ID=${id_user}
+      - GROUP_ID=${id_group}
       - TZ=${TZ}
     volumes:
       - ${appdata}/tinymediamanager:/config
@@ -235,7 +235,7 @@ services:
  #      - ${movies}:/media/movies
  #      - ${tv}:/media/tv    
     ports:
-      - ${Port-tmm}:5800
+      - ${Port_tmm}:5800
     restart: ${restart}     
 #Portainer
   portainer:
@@ -246,21 +246,21 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${appdata}/portainer_data:/data 
     ports:
-      - ${Port-portainer-web}:9000
-      - ${Port-portainer-alt}:8000    
+      - ${Port_portainer_web}:9000
+      - ${Port_portainer_alt}:8000    
     restart: ${restart}
 #WIKI     
   bookstack:
     image: linuxserver/bookstack
     container_name: bookstack
     environment:
-      - PUID=${id-user}
-      - PGID=${id-group}
-      - DB_HOST=${ip-local}:${Port-wiki-DB}
+      - PUID=${id_user}
+      - PGID=${id_group}
+      - DB_HOST=${ip-local}:${Port_wiki_DB}
       - DB_USER=admin
-      - DB_PASS=${passwd-norm-user}
+      - DB_PASS=${passwd_norm_user}
       - DB_DATABASE=bookstackapp
-      - APP_URL=https://wiki.${domain}
+      - APP_URL=192.168.1.80
     volumes:
       - ${appdata}/bookstack:/config
     ports:
@@ -273,17 +273,17 @@ services:
     image: linuxserver/mariadb
     container_name: bookstackdb
     environment:
-      - PUID=${id-user}
-      - PGID=${id-group}
-      - SQL_ROOT_PASSWORD=${passwd-norm-root}
+      - PUID=${id_user}
+      - PGID=${id_group}
+      - SQL_ROOT_PASSWORD=${passwd_norm_root}
       - TZ=${TZ}
       - MYSQL_DATABASE=bookstackapp
       - MYSQL_USER=admin
-      - MYSQL_PASSWORD=${passwd-norm-user}
+      - MYSQL_PASSWORD=${passwd_norm_user}
     volumes:
       - ${db}/bookstack:/config
     ports:
-      - ${Port-wiki}:3306
+      - ${Port_wiki}:3306
     restart: ${restart}
 #tube download
   YTDL:
@@ -292,8 +292,8 @@ services:
     network_mode: "service:transmission-openvpn"
     environment:
       ALLOW_CONFIG_MUTATIONS: 'true'
-      UID: ${id-user}
-      GID: ${id-group}
+      UID: ${id_user}
+      GID: ${id_group}
     volumes:
       - ${appdata}/ytdl_material:/app/appdata
       - ${alltube}/audio:/app/audio
@@ -306,33 +306,33 @@ services:
   #    - "${tube1}:17442"
     restart: ${restart}
 # HandBrake      
-  #handbrake:
-    # image: jlesage/handbrake
-    # container_name: HandBrake
-    # build:
-      # context: ${dockerfile}docker-handbrake
-      # dockerfile: Dockerfile
-    # environment:
-      # - AUTOMATED_CONVERSION_PRESET=Matrosky/H.264 MKV 720p30 25
-      # - AUTOMATED_CONVERSION_PRESET_2=Matrosky/H.264 MKV 1080p30 25
-      # - AUTOMATED_CONVERSION_PRESET_3=Matroska/H.264 MKV 2160p30
-      # - SECURE_CONNECTION=1
-      # - KEEP_APP_RUNNING=1
-      # - DISPLAY_WIDTH=1280
-      # - DISPLAY_HEIGHT=720
-      # - TZ=${TZ} 
-      # - PUID=${id-user}
-      # - PGID=${id-group}
-    # volumes:
-      # - "${appdata}/HandBrake:/config:rw"
-      # - "${root}:/storage:ro"
-      # - "${root}/HandBrake/watch720:/watch:rw"
-      # - "${root}/HandBrake/watch1080:/watch2:rw"
-      # - "${root}/HandBrake/watch2160:/watch3:rw"
-      # - "${root}/HandBrake/output:/output:rw"
-    # ports:
-      # - "${hand}:5800"
-    # restart: ${restart}
+  handbrake:
+    image: jlesage/handbrake
+    container_name: HandBrake
+    build:
+      context: ${dockerfile}docker-handbrake
+      dockerfile: Dockerfile
+    environment:
+      - AUTOMATED_CONVERSION_PRESET=Matrosky/H.264 MKV 720p30 25
+      - AUTOMATED_CONVERSION_PRESET_2=Matrosky/H.264 MKV 1080p30 25
+      - AUTOMATED_CONVERSION_PRESET_3=Matroska/H.264 MKV 2160p30
+      - SECURE_CONNECTION=1
+      - KEEP_APP_RUNNING=1
+      - DISPLAY_WIDTH=1280
+      - DISPLAY_HEIGHT=720
+      - TZ=${TZ} 
+      - PUID=${id_user}
+      - PGID=${id_group}
+    volumes:
+      - "${appdata}/HandBrake:/config:rw"
+      - "${root}:/storage:ro"
+      - "${root}/HandBrake/watch720:/watch:rw"
+      - "${root}/HandBrake/watch1080:/watch2:rw"
+      - "${root}/HandBrake/watch2160:/watch3:rw"
+      - "${root}/HandBrake/output:/output:rw"
+    ports:
+      - "${port_handbrake}:5800"
+    restart: ${restart}
 #Minecraft
   minecraft:
     image: itzg/minecraft-server:java8
@@ -343,8 +343,8 @@ services:
       - ${appdata}/minecraft/server:/data
       - ${appdata}/minecraft/modpacks:/modpacks:ro
     environment:
-      - UID=${id-user}
-      - GID=${id-group}
+      - UID=${id_user}
+      - GID=${id_group}
       - EULA=TRUE
       - MEMORY=6G 
       - REPLACE_ENV_VARIABLES=TRUE
@@ -369,13 +369,13 @@ services:
     container_name: PodGrab
     environment:
       - CHECK_FREQUENCY=240
-      - PASSWORD=${passwd-norm-user}     
+      - PASSWORD=${passwd_norm_user}     
  #      - username = podgrab
     volumes:
       - ${appdata}/podcast:/config
       - ${podcasts}:/assets
     ports:
-      - ${Port-podcast}:8080
+      - ${Port_podcast}:8080
     restart: ${restart}
 #Browser
   firefox:
@@ -388,8 +388,8 @@ services:
  #   ports:
  #     - "5800:5800"
     environment:
-      - USER_ID:${id-user}
-      - GROUP_ID:${id-group}
+      - USER_ID:${id_user}
+      - GROUP_ID:${id_group}
     volumes:
       - ${appdata}/firefox:/config:rw
       - ${torrent}/watch:/config/downloads:rw
@@ -398,8 +398,8 @@ services:
     image: ghcr.io/linuxserver/ddclient
     container_name: ddclient
     environment:
-      - PUID=${id-user}
-      - PGID=${id-group}
+      - PUID=${id_user}
+      - PGID=${id_group}
       - TZ=${TZ}
     volumes:
       - ${appdata}/ddclient:/config
@@ -412,11 +412,11 @@ services:
       dockerfile: Dockerfile
     environment:
       - KEEP_APP_RUNNING=1
-      - USER_ID=${id-user}
-      - GROUP_ID=${id-group}
+      - USER_ID=${id_user}
+      - GROUP_ID=${id_group}
       - TZ=${TZ}
     ports:
-      - "${Port-picard}:5800"
+      - "${Port_picard}:5800"
     volumes:
       - "${appdata}/picard:/config:rw"
       - "${torrent}/completed:/storage/sort:rw"
@@ -429,12 +429,12 @@ services:
     image: organizr/organizr:latest
     restart: ${restart}
     ports:
-      - ${Port-organizr}:80
+      - ${Port_organizr}:80
     volumes:
       - ${appdata}/organizr:/config
     environment:
-      - PUID=${id-user}
-      - PGID=${id-group}
+      - PUID=${id_user}
+      - PGID=${id_group}
       - TZ=${TZ}
 ###media
 #Sonarr      
@@ -442,8 +442,8 @@ services:
     image: ghcr.io/linuxserver/sonarr
     container_name: sonarr
     environment:
-      - PUID=${id-user}
-      - PUID=${id-group}
+      - PUID=${id_user}
+      - PUID=${id_group}
       - TZ=${TZ}
     volumes:
       - ${appdata}/sonarr:/config
@@ -451,17 +451,17 @@ services:
       - ${kidtv}:/tv/kidstv
       - ${torrent}:/downloads
     ports:
-      - 8989:8989
+      - ${Port_sonarr}:8989
     restart: ${restart}
 #Readarr
   readarr:
     container_name: readarr
     image: hotio/readarr
     ports:
-      - ${Port-readarr}:8787
+      - ${Port_readarr}:8787
     environment:
-      - PUID=${id-user}
-      - PUID=${id-group}
+      - PUID=${id_user}
+      - PUID=${id_group}
       - UMASK=002
       - TZ=${TZ}
     volumes:
@@ -472,8 +472,8 @@ services:
     image: ghcr.io/linuxserver/bazarr
     container_name: bazarr
     environment:
-      - PUID=${id-user}
-      - PUID=${id-group}
+      - PUID=${id_user}
+      - PUID=${id_group}
       - TZ=${TZ}
     volumes:
       - ${appdata}/bazarr:/config
@@ -482,94 +482,34 @@ services:
       - ${kidmovies}:/kidmovies #optional
       - ${kidtv}:/kidtv #optional
     ports:
-      - ${Port-bazarr}:6767
+      - ${Port_bazarr}:6767
     restart: ${restart}
 ##gaps
 gaps:
   image: housewrecker/gaps:latest
   container_name: gaps
   environment:
-    - PGID=${PGID}
-    - PUID=${PUID}
+    - PGID=${id_user}
+    - PUID=${id_group}
     - TZ=${TZ}
   ports:
-    - ${Port-gaps}:8484
+    - ${Port_gaps}:8484
   restart: ${restart}
   expose:
     - "32400"
   volumes:
     - /etc/localtime:/etc/localtime:ro
-#lidarr
-  lidarr:
-    image: ghcr.io/linuxserver/lidarr
-    container_name: lidarr
-    environment:
-      - PUID=${id-user}
-      - PUID=${id-group}
-      - TZ=${TZ}
-    volumes:
-      - ${appdata}/lidarr:/config
-      - ${music}:/music/oldermusic
-      - ${kidmusic}:/music/kidmusic
-      - ${torrent}:/downloads
-    ports:
-      - ${lidarr}:8686
-    restart: ${restart}
-##tdarr
-  tdarr:
-    container_name: tdarr
-    image: haveagitgat/tdarr:latest
-    restart: ${restart}
-    network_mode: bridge
-    ports:
-      - ${Port-tdarr-web}:8265 # webUI port
-      - ${Port-tdarr-server}:8266 # server port
-      - ${Port-tdarr-node}:8267 # node port. It should be mapped on this container because
-                  # the node container use the network from the main container
-    environment:
-      - TZ=${TZ}
-      - PUID=${id-user}
-      - PGID=${id-group}
-      - UMASK_SET=002
-      - serverIP=${ip-local}
-      - serverPort=${Port-tdarr-server}
-      - webUIPort=${Port-tdarr-web}
-    volumes:
-      - ${appdata}/tdarr/server:/app/server
-      - ${appdata}/tdarr/config:/app/configs
-      - ${appdata}/tdarr/logs:/app/logs
-      - ${media}:/media
-
-  tdarr-node:
-    container_name: tdarr-node
-    image: haveagitgat/tdarr_node:latest
-    restart: ${restart}
-    network_mode: service:tdarr
-    environment:
-      - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - UMASK_SET=002
-      - nodeID=MainNode
-      - nodeIP=${ip-local}
-      - nodePort=${Port-tdarr-node}
-      - serverIP=${ip-local}
-      - serverPort=${Port-tdarr-server}
-    volumes:
-      - ${appdata}/tdarr/config:/app/configs
-      - ${appdata}/tdarr/logs:/app/logs
-      - ${media}:/media
 ###utilities
 #darktable
   darktable:
     image: ghcr.io/linuxserver/darktable
     container_name: darktable
     environment:
-      - PUID=${id-user}
-      - PUID=${id-group}
+      - PUID=${id_user}
+      - PUID=${id_group}
       - TZ=${TZ}
     volumes:
       - ${appdata}/darktable:/config
     ports:
-      - ${Port-darktable}:3000
+      - ${Port_darktable}:3000
     restart: ${restart}
