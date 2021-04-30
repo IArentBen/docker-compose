@@ -51,7 +51,7 @@ services:
       - ${torrent}:/data
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - ${Port_transmission-openvpn}:9091
+      - ${Port_transmission_openvpn}:9091
       - ${Port_YoutubeDL}:17442
       - ${Port_firefox}:5800
     sysctls:
@@ -182,7 +182,7 @@ services:
     volumes:
       - ${appdata}/bookstack:/config
     ports:
-      - ${stackapp}:80
+      - ${Port_wiki}:80
     restart: ${restart} 
     depends_on:
       - bookstack_db
@@ -249,7 +249,7 @@ services:
       - "${root}/HandBrake/watch2160:/watch3:rw"
       - "${root}/HandBrake/output:/output:rw"
     ports:
-      - "${port_handbrake}:5800"
+      - "${Port_handbrake}:5800"
     restart: ${restart}
 #Minecraft
   minecraft:
