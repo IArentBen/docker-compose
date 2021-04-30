@@ -35,7 +35,7 @@ services:
         #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
     cap_add:
       - NET_ADMIN
-    network:
+    networks:
       vlanDNS
     restart: ${restart}                  
 #Torrent+VPN
