@@ -361,7 +361,7 @@ services:
     container_name: sonarr
     environment:
       - PUID=${id_user}
-      - PUID=${id_group}
+      - PGID=${id_group}
       - TZ=${TZ}
     volumes:
       - ${appdata}/sonarr:/config
