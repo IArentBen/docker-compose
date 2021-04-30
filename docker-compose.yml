@@ -403,20 +403,20 @@ services:
       - ${Port_bazarr}:6767
     restart: ${restart}
 ##gaps
-gaps:
-  image: housewrecker/gaps:latest
-  container_name: gaps
-  environment:
-    - PGID=${id_user}
-    - PUID=${id_group}
-    - TZ=${TZ}
-  ports:
-    - ${Port_gaps}:8484
-  restart: ${restart}
-  expose:
-    - "32400"
-  volumes:
-    - /etc/localtime:/etc/localtime:ro
+  gaps:
+    image: housewrecker/gaps:latest
+    container_name: gaps
+    environment:
+      - PGID=${id_user}
+      - PUID=${id_group}
+      - TZ=${TZ}
+    ports:
+      - ${Port_gaps}:8484
+    restart: ${restart}
+    expose:
+      - "32400"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
 ###utilities
 #darktable
   darktable:
