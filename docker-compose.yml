@@ -429,5 +429,5 @@ services:
     volumes:
       - ${appdata}/darktable:/config
     ports:
-      - ${Port-darktable}:3000
+      - ${Port_darktable}:3000
     restart: ${restart}
