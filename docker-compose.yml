@@ -435,6 +435,8 @@ services:
       - '${Port_nginx}:81'
     environment:
       DB_SQLITE_FILE: "/data/database.sqlite"
+    networks: 
+      - vlanDNS
     volumes:
       - ${appdata}/nginx/data:/data
       - ${appdata}/nginx/letsencrypt:/etc/letsencrypt
