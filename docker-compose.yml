@@ -371,20 +371,6 @@ services:
     ports:
       - ${Port_sonarr}:8989
     restart: ${restart}
-#Readarr
-  readarr:
-    container_name: readarr
-    image: hotio/readarr
-    ports:
-      - ${Port_readarr}:8787
-    environment:
-      - PUID=${id_user}
-      - PGID=${id_group}
-      - UMASK=002
-      - TZ=${TZ}
-    volumes:
-      - ${appdata}/readarr:/config
-      - ${books}:/done
 # Bazarr      
   bazarr:
     image: ghcr.io/linuxserver/bazarr
