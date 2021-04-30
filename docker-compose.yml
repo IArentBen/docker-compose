@@ -2,11 +2,16 @@ version: "3.7"
 #Networks
 networks:
   gitea:
-  t2_proxy:
-    external:
-      name: t2_proxy
-  default:
-    driver: bridge  
+  # define a VLAN network (eth1 is trunked to multiple VLANs)
+  vlanDNS:
+    driver: macvlan
+    driver_opts:
+      parent: eth1
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.254
+          ip_range: 192.168.1.84/28 # IP from this pool are assigned automatically
 #SERVICES
 services:    
   pihole:
@@ -30,6 +35,8 @@ services:
         #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
     cap_add:
       - NET_ADMIN
+    network:
+      vlanDNS
     restart: ${restart}                  
 #Torrent+VPN
   transmission-openvpn:
