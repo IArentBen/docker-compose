@@ -6,7 +6,7 @@ networks:
   vlanDNS:
     driver: macvlan
     driver_opts:
-      parent: eno2.10
+      parent: eno1.10
     ipam:
       config:
         - subnet: 192.168.1.0/24
