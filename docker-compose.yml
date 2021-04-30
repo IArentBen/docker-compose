@@ -3,8 +3,9 @@ version: "3.7"
 networks:
   gitea:
   # define a VLAN network (eth1 is trunked to multiple VLANs)
-  vlanDNS:
-    # driver: macvlan
+#  vlanDNS:
+  default: 
+   # driver: macvlan
     # driver_opts:
     #   parent: eno1.10
     # ipam:
@@ -37,8 +38,8 @@ services:
         #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
     cap_add:
       - NET_ADMIN
-    networks:
-      - vlanDNS
+#    networks:
+#      - vlanDNS
     restart: ${restart}                  
 #Torrent+VPN
   transmission-openvpn:
@@ -426,7 +427,7 @@ services:
     ports:
       - ${Port_darktable}:3000
     restart: ${restart}
-  app:
+  NPM:
     image: 'jc21/nginx-proxy-manager:latest'
     container_name: npm
     ports:
@@ -436,7 +437,7 @@ services:
     environment:
       DB_SQLITE_FILE: "/data/database.sqlite"
     networks: 
-      - vlanDNS
+      - default
     volumes:
       - ${appdata}/nginx/data:/data
       - ${appdata}/nginx/letsencrypt:/etc/letsencrypt
