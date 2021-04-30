@@ -108,7 +108,7 @@ services:
 #Cloud Service
   nextcloud:
     image: linuxserver/nextcloud
-    container_name: Nextcloud
+    container_name: nextcloud
     environment:
       - PUID=${id_user}
       - PGID=${id_group}
@@ -122,7 +122,7 @@ services:
 #Selfhosted Git
   Gitserver:
     image: gitea/gitea:latest
-    container_name: Gitea
+    container_name: g0itea
     #user: ${gituser}
     environment: 
     - USER_UID=${id_user}
@@ -141,7 +141,7 @@ services:
 #Movie meta data
   TMM:
     image: romancin/tinymediamanager:latest
-    container_name: T.M.M.
+    container_name: tmm
     environment:
       - USER_ID=${id_user}
       - GROUP_ID=${id_group}
@@ -158,7 +158,7 @@ services:
 #Portainer
   portainer:
     image: portainer/portainer
-    container_name: Portainer
+    container_name: portainer
  #    command: -H unix:///var/run/docker.sock
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -206,7 +206,7 @@ services:
 #tube download
   YTDL:
     image: tzahi12345/youtubedl-material:nightly
-    container_name: Y.T.D.L.
+    container_name: ytdl
     network_mode: "service:transmission-openvpn"
     environment:
       ALLOW_CONFIG_MUTATIONS: 'true'
@@ -226,7 +226,7 @@ services:
 # HandBrake      
   handbrake:
     image: jlesage/handbrake
-    container_name: HandBrake
+    container_name: handBrake
     build:
       context: ${dockerfile}docker-handbrake
       dockerfile: Dockerfile
@@ -254,7 +254,7 @@ services:
 #Minecraft
   minecraft:
     image: itzg/minecraft-server:java8
-    container_name: mc
+    container_name: minecraft
     ports:
       - "25565:25565"
     volumes:
@@ -284,7 +284,7 @@ services:
 #PODCAST
   podgrab:
     image: akhilrex/podgrab
-    container_name: PodGrab
+    container_name: podgrab
     environment:
       - CHECK_FREQUENCY=240
       - PASSWORD=${passwd_norm_user}     
