@@ -201,7 +201,7 @@ services:
     volumes:
       - ${db}/bookstack:/config
     ports:
-      - ${Port_wiki}:3306
+      - ${Port_wiki_DB}:3306
     restart: ${restart}
 #tube download
   YTDL:
