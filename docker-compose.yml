@@ -379,7 +379,7 @@ services:
       - ${Port_readarr}:8787
     environment:
       - PUID=${id_user}
-      - PUID=${id_group}
+      - PGID=${id_group}
       - UMASK=002
       - TZ=${TZ}
     volumes:
@@ -391,7 +391,7 @@ services:
     container_name: bazarr
     environment:
       - PUID=${id_user}
-      - PUID=${id_group}
+      - PGID=${id_group}
       - TZ=${TZ}
     volumes:
       - ${appdata}/bazarr:/config
@@ -407,8 +407,8 @@ services:
     image: housewrecker/gaps:latest
     container_name: gaps
     environment:
-      - PGID=${id_user}
-      - PUID=${id_group}
+      - PUID=${id_user}
+      - PGID=${id_group}
       - TZ=${TZ}
     ports:
       - ${Port_gaps}:8484
@@ -424,7 +424,7 @@ services:
     container_name: darktable
     environment:
       - PUID=${id_user}
-      - PUID=${id_group}
+      - PGID=${id_group}
       - TZ=${TZ}
     volumes:
       - ${appdata}/darktable:/config
