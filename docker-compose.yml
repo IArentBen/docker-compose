@@ -427,3 +427,18 @@ services:
       - ${appdata}/nginx/data:/data
       - ${appdata}/nginx/letsencrypt:/etc/letsencrypt
       - ${appdata}/nginx/json/config.json:/app/config/production.json
+  jackett:
+    image: ghcr.io/linuxserver/jackett
+    container_name: jackett
+    environment:
+      - PUID=${id_user}
+      - PGID=${id_group}
+      - TZ=${TZ}
+      - AUTO_UPDATE=true #optional
+#      - RUN_OPTS=<run options here> #optional
+    volumes:
+      - ${appdata}/jackett:/config
+      - ${torrent}:/downloads
+    ports:
+      - ${Port_jackett}:9117
+    restart: ${restart}
