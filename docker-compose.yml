@@ -4,29 +4,7 @@ networks:
   gitea:
   # define a VLAN network (eth1 is trunked to multiple VLANs)
 #SERVICES
-services:    
-  pihole:
-    container_name: pihole
-    image: pihole/pihole:latest
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "67:67/udp"
-      - "${Port_pihole}:80/tcp"
-    environment:
-      TZ: ${TZ}
-      WEBPASSWORD: ${passwd_code_user}
-      ADMIN_EMAIL: ${email_server}
-      ADMIN_EMAIL: 1.1.1.1,8.8.8.8
-        # Volumes store your data between container upgrades
-    volumes:
-      - '${appdata}/pihole/pihole:/etc/pihole/'
-      - '${appdata}/pihole/dnsmasq.d/:/etc/dnsmasq.d/'
-        # Recommended but not required (DHCP needs NET_ADMIN)
-        #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
-    cap_add:
-      - NET_ADMIN
-    restart: ${restart}                  
+services:                
 #Torrent+VPN
   transmission-openvpn:
     image: haugene/transmission-openvpn:latest
