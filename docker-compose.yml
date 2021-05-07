@@ -429,8 +429,8 @@ services:
       - TZ=${TZ}
     volumes:
       - ${appdata}/radarr:/config
-      - ${movies}:/movies/oldmovies
-      - ${kidmovies}:/movies/kidmovies
+      - ${movies}:/downloads/parents
+      - ${kidmovies}:/movies/kids
       - ${torrent}:/downloads
     ports:
       - ${Port_radarr}:7878
