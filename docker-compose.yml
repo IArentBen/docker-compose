@@ -430,7 +430,7 @@ services:
     volumes:
       - ${appdata}/radarr:/config
       - ${movies}:/downloads/parents
-      - ${kidmovies}:/movies/kids
+      - ${kidmovies}:/downloads/kids
       - ${torrent}:/downloads
     ports:
       - ${Port_radarr}:7878
