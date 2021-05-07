@@ -420,3 +420,18 @@ services:
     ports:
       - ${Port_jackett}:9117
     restart: ${restart}
+  radarr:
+    image: ghcr.io/linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PUID=${id_user}
+      - PGID=${id_group}
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/radarr:/config
+      - ${movies}:/movies/oldmovies
+      - ${kidmovies}:/movies/kidmovies
+      - ${torrent}:/downloads
+    ports:
+      - ${Port_radarr}:7878
+    restart: ${restart}
