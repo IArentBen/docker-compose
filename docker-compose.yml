@@ -27,7 +27,7 @@ services:
     ports:
       - ${Port_transmission_openvpn}:9091
       - ${Port_YoutubeDL}:17442
-      - ${Port_firefox}:3000
+      - ${Port_firefox}:5800
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
     cap_add:
@@ -271,14 +271,15 @@ services:
     restart: ${restart}
 #Browser
   firefox:
-    image: ghcr.io/linuxserver/firefox
+    image: jlesage/firefox
     container_name: firefox
     environment:
-      - PUID=${id_user}
-      - PGID=${id_group}
+      - USER_ID=${id_user}
+      - GROUP_ID=${id_group}
       - TZ=${TZ}
-    shm_size: "1gb"
-    restart: unless-stopped
+      - KEEP_APP_RUNNING=1
+    shm_size: "2gb"
+    restart: ${restart}
     network_mode: "service:transmission-openvpn"
     volumes:
       - ${appdata}/firefox:/config:rw
