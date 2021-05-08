@@ -27,7 +27,7 @@ services:
     ports:
       - ${Port_transmission_openvpn}:9091
       - ${Port_YoutubeDL}:17442
-      - ${Port_firefox}:5800
+      - ${Port_firefox}:3000
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
     cap_add:
@@ -271,17 +271,15 @@ services:
     restart: ${restart}
 #Browser
   firefox:
-    image: jlesage/firefox
+    image: ghcr.io/linuxserver/firefox
     container_name: firefox
-    build:
-      context: ${dockerfile}docker-firefox
-      dockerfile: Dockerfile
-    network_mode: "service:transmission-openvpn"
- #   ports:
- #     - "5800:5800"
     environment:
-      - USER_ID:${id_user}
-      - GROUP_ID:${id_group}
+      - PUID=${id_user}
+      - PGID=${id_group}
+      - TZ=${TZ}
+    shm_size: "1gb"
+    restart: unless-stopped
+    network_mode: "service:transmission-openvpn"
     volumes:
       - ${appdata}/firefox:/config:rw
       - ${torrent}/watch:/config/downloads:rw
@@ -434,4 +432,17 @@ services:
       - ${torrent}:/downloads
     ports:
       - ${Port_radarr}:7878
+    restart: ${restart}
+  ombi:
+    image: ghcr.io/linuxserver/ombi
+    container_name: ombi
+    environment:
+      - PUID=${id_user}
+      - PGID=${id_group}
+      - TZ=${TZ}
+      - BASE_URL=/ombi #optional
+    volumes:
+      - ${appdata}/ombi:/config
+    ports:
+      - ${Port_ombi}:3579
     restart: ${restart}
