@@ -407,7 +407,7 @@ services:
       - CERTPROVIDER= #optional
       - EMAIL=${email_personal} #optional
       - ONLY_SUBDOMAINS=false #optional
-      - EXTRA_DOMAINS=<extradomains> #optional
+#      - EXTRA_DOMAINS=<extradomains> #optional
       - STAGING=false #optional
     volumes:
       - ${appdata}/swag:/config
