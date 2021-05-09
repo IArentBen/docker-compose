@@ -390,7 +390,7 @@ services:
     ports:
       - ${Port_darktable}:3000
     restart: ${restart}
-  Reverse_Proxy:
+  #Reverse_Proxy:
   swag:
     image: ghcr.io/linuxserver/swag
     container_name: swag
