@@ -390,20 +390,43 @@ services:
     ports:
       - ${Port_darktable}:3000
     restart: ${restart}
-  NPM:
-    image: 'jc21/nginx-proxy-manager:latest'
-    container_name: npm
-    ports:
-      - '80:80'
-      - '443:443'
-      - '${Port_nginx}:81'
+  Reverse_Proxy:
+  swag:
+    image: ghcr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
     environment:
-      DB_SQLITE_FILE: "/data/database.sqlite"
-      DISABLE_IPV6: 'true'
+      - PUID=${id_user}
+      - PGID=${id_group}
+      - TZ=${TZ}
+      - URL=${domain}
+      - SUBDOMAINS=www,
+      - VALIDATION=http
+      - CERTPROVIDER= #optional
+      - EMAIL=${email_server} #optional
+      - ONLY_SUBDOMAINS=false #optional
+      - EXTRA_DOMAINS=<extradomains> #optional
+      - STAGING=false #optional
     volumes:
-      - ${appdata}/nginx/data:/data
-      - ${appdata}/nginx/letsencrypt:/etc/letsencrypt
-      - ${appdata}/nginx/json/config.json:/app/config/production.json
+      - ${appdata}/swag:/config
+    ports:
+      - 443:443
+      - 80:80 #optional
+    restart: ${restart}
+#    image: 'jc21/nginx-proxy-manager:latest'
+#    container_name: npm
+#    ports:
+#      - '80:80'
+#      - '443:443'
+#      - '${Port_nginx}:81'
+#    environment:
+#      DB_SQLITE_FILE: "/data/database.sqlite"
+#      DISABLE_IPV6: 'true'
+#    volumes:
+#      - ${appdata}/nginx/data:/data
+#      - ${appdata}/nginx/letsencrypt:/etc/letsencrypt
+#      - ${appdata}/nginx/json/config.json:/app/config/production.json
   jackett:
     image: ghcr.io/linuxserver/jackett
     container_name: jackett
