@@ -401,8 +401,9 @@ services:
       - PGID=${id_group}
       - TZ=${TZ}
       - URL=${domain}
-      - SUBDOMAINS=www,
+      - SUBDOMAINS=t,git,
       - VALIDATION=http
+      - DNSPLUGIN=google
       - CERTPROVIDER= #optional
       - EMAIL=${email_server} #optional
       - ONLY_SUBDOMAINS=false #optional
