@@ -471,3 +471,11 @@ services:
     ports:
       - ${Port_ombi}:3579
     restart: ${restart}
+  authelia:
+    image: authelia/authelia
+    container_name: authelia
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/authelia:/config
+    restart: ${restart}    
