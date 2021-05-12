@@ -10,6 +10,8 @@ services:
     image: haugene/transmission-openvpn:latest
     container_name: torrent
     environment:
+      - TZ=${TZ}
+      - HEALTH_CHECK_HOST=reddit.com
       - TRANSMISSION_WEB_UI=flood-for-transmission
       - PGID=${id_group}
       - PUID=${id_user}
@@ -20,7 +22,8 @@ services:
       - OPENVPN_PASSWORD=${passwd_keyforvpn}
       - WEBPROXY_ENABLED=false
       - LOCAL_NETWORK=192.168.1.0/24
-      - dns=1.1.1.1
+      - OVERRIDE_DNS_1=192.168.1.84
+      - OVERRIDE_DNS_2=8.8.4.4
     volumes:
       - ${torrent}:/data
       - /etc/localtime:/etc/localtime:ro
@@ -96,7 +99,7 @@ services:
 #Selfhosted Git
   Gitserver:
     image: gitea/gitea:latest
-    container_name: g0itea
+    container_name: gitea
     #user: ${gituser}
     environment: 
     - USER_UID=${id_user}
