@@ -483,6 +483,6 @@ services:
 #      - CERTFILE= #optional
 #      - KEYFILE= #optional
     ports:
-      - ${Port_ladp_daemon}:8888
-      - ${Port_ladp_login}:9000
+      - ${Port_ldap_daemon}:8888
+      - ${Port_ldap_login}:9000
     restart: ${restart}
