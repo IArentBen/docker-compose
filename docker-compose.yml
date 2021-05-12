@@ -474,11 +474,15 @@ services:
     ports:
       - ${Port_ombi}:3579
     restart: ${restart}
-  authelia:
-    image: authelia/authelia
-    container_name: authelia
+  ldap-auth:
+    image: ghcr.io/linuxserver/ldap-auth
+    container_name: ldap
     environment:
       - TZ=${TZ}
-    volumes:
-      - ${appdata}/authelia:/config
-    restart: ${restart}    
+#      - FERNETKEY= #optional
+#      - CERTFILE= #optional
+#      - KEYFILE= #optional
+    ports:
+      - ${Port_ladp_daemon}:8888
+      - ${Port_ladp_login}:9000
+    restart: ${restart}
