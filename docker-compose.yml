@@ -182,18 +182,16 @@ services:
     restart: ${restart}
 #tube download
   YTDL:
-    image: tzahi12345/youtubedl-material:nightly
+    image: "nbr23/youtube-dl-server:latest"
     container_name: ytdl
     network_mode: "service:transmission-openvpn"
     environment:
-      ALLOW_CONFIG_MUTATIONS: 'true'
       UID: ${id_user}
       GID: ${id_group}
     volumes:
-      - ${appdata}/ytdl_material:/app/appdata
+      - ${appdata}/ytdl_material:/app_config/config.yml:ro
       - ${alltube}/audio:/app/audio
       - ${alltube}/video:/app/video
-      - ${alltube}/subscriptions:/app/subscriptions
       - ${bentube}:/app/users/ben
       - ${kidtube}:/app/users/kid
   # Ports are published on Haugene service 
