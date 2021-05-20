@@ -185,13 +185,9 @@ services:
     image: "nbr23/youtube-dl-server:latest"
     container_name: ytdl
     network_mode: "service:transmission-openvpn"
-    environment:
-      UID: ${id_user}
-      GID: ${id_group}
     volumes:
-      - ${appdata}/ytdl_material:/app_config/config.yml:ro
-      - ${alltube}/audio:/app/audio
-      - ${alltube}/video:/app/video
+      - ${appdata}/ytdl:/app_config
+      - ${alltube}:/youtube-dl
       - ${bentube}:/app/users/ben
       - ${kidtube}:/app/users/kid
   # Ports are published on Haugene service 
