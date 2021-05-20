@@ -347,20 +347,6 @@ services:
     ports:
       - ${Port_bazarr}:6767
     restart: ${restart}
-###utilities
-#darktable
-  darktable:
-    image: ghcr.io/linuxserver/darktable
-    container_name: darktable
-    environment:
-      - PUID=${id_user}
-      - PGID=${id_group}
-      - TZ=${TZ}
-    volumes:
-      - ${appdata}/darktable:/config
-    ports:
-      - ${Port_darktable}:3000
-    restart: ${restart}
 #Reverse_Proxy:
   swag:
     image: ghcr.io/linuxserver/swag
@@ -378,7 +364,7 @@ services:
       - CERTPROVIDER= #optional
       - EMAIL=${email_personal} #optional
       - ONLY_SUBDOMAINS=false #optional
-#      - EXTRA_DOMAINS=<extradomains> #optional
+  #    - EXTRA_DOMAINS=<extradomains> #optional
       - STAGING=false #optional
     volumes:
       - ${appdata}/swag:/config
@@ -387,7 +373,7 @@ services:
       - 80:80 #optional
     restart: ${restart}
 #JACKETT  
-jackett:
+  jackett:
     image: ghcr.io/linuxserver/jackett
     container_name: jackett
     environment:
