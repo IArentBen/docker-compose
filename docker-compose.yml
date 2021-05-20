@@ -369,7 +369,7 @@ services:
       - PGID=${id_group}
       - TZ=${TZ}
       - URL=${domain}
-      - SUBDOMAINS=t,git,
+      - SUBDOMAINS=t,git
       - VALIDATION=http
       - DNSPLUGIN=google
       - CERTPROVIDER= #optional
