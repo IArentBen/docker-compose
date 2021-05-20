@@ -258,7 +258,7 @@ services:
     container_name: podgrab
     environment:
       - CHECK_FREQUENCY=240
-      - PASSWORD=${passwd_norm_user}     
+ #     - PASSWORD=${passwd_norm_user}     
  #      - username = podgrab
     volumes:
       - ${appdata}/podcast:/config
@@ -310,20 +310,6 @@ services:
       - "${torrent}/completed:/storage/sort:rw"
       - "${media}/music:/storage/music:rw"
       - "${media}/kidmusic:/storage/kidsmusic:rw"
-#organizr
-  organizr:
-    container_name: organizr
-    hostname: organizr
-    image: organizr/organizr:latest
-    restart: ${restart}
-    ports:
-      - ${Port_organizr}:80
-    volumes:
-      - ${appdata}/organizr:/config
-    environment:
-      - PUID=${id_user}
-      - PGID=${id_group}
-      - TZ=${TZ}
 ###media
 #Sonarr      
   sonarr:
@@ -358,21 +344,6 @@ services:
     ports:
       - ${Port_bazarr}:6767
     restart: ${restart}
-##gaps
-  gaps:
-    image: housewrecker/gaps:latest
-    container_name: gaps
-    environment:
-      - PUID=${id_user}
-      - PGID=${id_group}
-      - TZ=${TZ}
-    ports:
-      - ${Port_gaps}:8484
-    restart: ${restart}
-    expose:
-      - "32400"
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
 ###utilities
 #darktable
   darktable:
@@ -387,7 +358,7 @@ services:
     ports:
       - ${Port_darktable}:3000
     restart: ${restart}
-  #Reverse_Proxy:
+#Reverse_Proxy:
   swag:
     image: ghcr.io/linuxserver/swag
     container_name: swag
@@ -412,20 +383,8 @@ services:
       - 443:443
       - 80:80 #optional
     restart: ${restart}
-#    image: 'jc21/nginx-proxy-manager:latest'
-#    container_name: npm
-#    ports:
-#      - '80:80'
-#      - '443:443'
-#      - '${Port_nginx}:81'
-#    environment:
-#      DB_SQLITE_FILE: "/data/database.sqlite"
-#      DISABLE_IPV6: 'true'
-#    volumes:
-#      - ${appdata}/nginx/data:/data
-#      - ${appdata}/nginx/letsencrypt:/etc/letsencrypt
-#      - ${appdata}/nginx/json/config.json:/app/config/production.json
-  jackett:
+#JACKETT  
+jackett:
     image: ghcr.io/linuxserver/jackett
     container_name: jackett
     environment:
@@ -440,6 +399,7 @@ services:
     ports:
       - ${Port_jackett}:9117
     restart: ${restart}
+#RADARR
   radarr:
     image: ghcr.io/linuxserver/radarr
     container_name: radarr
@@ -455,6 +415,7 @@ services:
     ports:
       - ${Port_radarr}:7878
     restart: ${restart}
+#OMBI    
   ombi:
     image: ghcr.io/linuxserver/ombi
     container_name: ombi
@@ -468,15 +429,15 @@ services:
     ports:
       - ${Port_ombi}:3579
     restart: ${restart}
-  ldap-auth:
-    image: ghcr.io/linuxserver/ldap-auth
-    container_name: ldap
-    environment:
-      - TZ=${TZ}
-#      - FERNETKEY= #optional
-#      - CERTFILE= #optional
-#      - KEYFILE= #optional
-    ports:
-      - ${Port_ldap_daemon}:8888
-      - ${Port_ldap_login}:9000
-    restart: ${restart}
+#FILEBROWSER
+filebrowser:
+  image: hurlenko/filebrowser
+  user: "${id_user}:${id_group}"
+  ports:
+    - ${Port_files}:8080
+  volumes:
+    - ${root}:/data
+    - ${appdata}/files:/config
+  environment:
+    - FB_BASEURL=/filebrowser
+  restart: always
