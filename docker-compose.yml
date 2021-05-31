@@ -120,7 +120,7 @@ services:
 #Movie meta data
   TMM:
     image: romancin/tinymediamanager:latest
-    container_name: tmm
+    container_name: tinymediamanager
     environment:
       - USER_ID=${id_user}
       - GROUP_ID=${id_group}
@@ -181,7 +181,7 @@ services:
 # HandBrake      
   handbrake:
     image: jlesage/handbrake
-    container_name: handBrake
+    container_name: handbrake
     build:
       context: ${dockerfile}docker-handbrake
       dockerfile: Dockerfile
@@ -401,6 +401,7 @@ services:
 #FILEBROWSER
   filebrowser:
     image: hurlenko/filebrowser
+    container_name: filebrowser
     user: "${id_user}:${id_group}"
     ports:
       - ${Port_files}:8080
