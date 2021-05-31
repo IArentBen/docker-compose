@@ -53,9 +53,10 @@ services:
        - TZ=${TZ}
        - PASSWORD=${passwd_code_user}
        - SUDO_PASSWORD=${passwd_code_root}
+       #- PROXY_DOMAIN=code.charles.place
      volumes:
        - ${appdata}/code:/config
-       - /home/docker:/Files:rw
+       - /server/:/Files:rw
      ports:
        - ${Port_Code}:8443
      restart: ${restart}
@@ -75,13 +76,11 @@ services:
       - ${movies}:/movies  
       - ${music}:/music 
       - ${sleep}:/sleep 
-      - ${bentube}:/bentube
+      - ${tube}:/tube
       - ${podcasts}:/podcasts
       - ${kidmovies}:/kidmovie
       - ${kidmusic}:/kidmusic
       - ${kidtv}:/kidtv
-      - ${kidtube}:/kidtube
-      - ${alltube}:/alltube
       - ${xmasspecial}:/Xmas  
     network_mode: host
     restart: ${restart}
@@ -130,8 +129,10 @@ services:
       - ${appdata}/tinymediamanager:/config
       - ${torrent}:/media/downloads
       - ${media}/unsorted:/media/finished
- #      - ${movies}:/media/movies
- #      - ${tv}:/media/tv    
+      - ${movies}:/media/movies
+      - ${tv}:/media/tv    
+      - ${kidmovies}:/media/kidmovies
+      - ${kidtv}:/media/kidtv   
     ports:
       - ${Port_tmm}:5800
     restart: ${restart}     
@@ -148,51 +149,31 @@ services:
       - ${Port_portainer_alt}:8000    
     restart: ${restart}
 #WIKI     
-  bookstack:
-    image: linuxserver/bookstack
-    container_name: bookstack
+  wiki:
+    image: zadam/trilium:latest
+    container_name: trilium
     environment:
       - PUID=${id_user}
       - PGID=${id_group}
-      - DB_HOST=${ip-local}:${Port_wiki_DB}
-      - DB_USER=admin
-      - DB_PASS=${passwd_norm_user}
-      - DB_DATABASE=bookstackapp
-      - APP_URL=192.168.1.80
+      - TZ${TZ}
     volumes:
-      - ${appdata}/bookstack:/config
+      - ${appdata}/trilium/data:/home/node/trilium-data
     ports:
-      - ${Port_wiki}:80
+      - ${Port_wiki}:8080
     restart: ${restart} 
-    depends_on:
-      - bookstack_db
- #Bookstack MARIADB
-  bookstack_db:
-    image: linuxserver/mariadb
-    container_name: bookstackdb
-    environment:
-      - PUID=${id_user}
-      - PGID=${id_group}
-      - SQL_ROOT_PASSWORD=${passwd_norm_root}
-      - TZ=${TZ}
-      - MYSQL_DATABASE=bookstackapp
-      - MYSQL_USER=admin
-      - MYSQL_PASSWORD=${passwd_norm_user}
-    volumes:
-      - ${db}/bookstack:/config
-    ports:
-      - ${Port_wiki_DB}:3306
-    restart: ${restart}
 #tube download
-  YTDL:
-    image: "nbr23/youtube-dl-server:latest"
+  ytdl_material:
+    environment: 
+      ALLOW_CONFIG_MUTATIONS: 'true'
+    image: tzahi12345/youtubedl-material:latest
     container_name: ytdl
     network_mode: "service:transmission-openvpn"
     volumes:
-      - ${appdata}/ytdl:/app_config
-      - ${alltube}:/youtube-dl
-      - ${bentube}:/app/users/ben
-      - ${kidtube}:/app/users/kid
+      - ${appdata}/ytdl:/app/appdata
+      - ${tubevideo}:/app/video
+      - ${tubeaudio}:/app/audio
+      - ${tubesub}:/app/subscriptions
+      - ${tubeuser}:/app/users
   # Ports are published on Haugene service 
   #  ports:
   #    - "${tube1}:17442"
@@ -208,7 +189,7 @@ services:
       - AUTOMATED_CONVERSION_PRESET=Matrosky/H.264 MKV 720p30 25
       - AUTOMATED_CONVERSION_PRESET_2=Matrosky/H.264 MKV 1080p30 25
       - AUTOMATED_CONVERSION_PRESET_3=Matroska/H.264 MKV 2160p30
-      - SECURE_CONNECTION=1
+      - SECURE_CONNECTION=0
       - KEEP_APP_RUNNING=1
       - DISPLAY_WIDTH=1280
       - DISPLAY_HEIGHT=720
@@ -358,10 +339,9 @@ services:
       - PGID=${id_group}
       - TZ=${TZ}
       - URL=${domain}
-      - SUBDOMAINS=t,git
-      - VALIDATION=http
-      - DNSPLUGIN=google
-      - CERTPROVIDER= #optional
+      - SUBDOMAINS=${subdomains}
+      - VALIDATION=dns
+      - DNSPLUGIN=cloudflare
       - EMAIL=${email_personal} #optional
       - ONLY_SUBDOMAINS=false #optional
   #    - EXTRA_DOMAINS=<extradomains> #optional
@@ -371,7 +351,7 @@ services:
     ports:
       - 443:443
       - 80:80 #optional
-    restart: ${restart}
+    restart: always
 #JACKETT  
   jackett:
     image: ghcr.io/linuxserver/jackett
@@ -430,3 +410,21 @@ services:
     environment:
       - FB_BASEURL=/filebrowser
     restart: always
+#Music
+  mstream:
+    image: ghcr.io/linuxserver/mstream
+    container_name: mstream
+    environment:
+      - PUID=${id_user}
+      - PGID=${id_group}
+      - USER=admin
+      - PASSWORD=${passwd_norm_user}
+      - USE_JSON=true/false
+      - TZ=${TZ}
+    volumes:
+      - ${appdata}/mstream:/config
+      - ${music}:/music
+      - ${kidmusic}:/kidsmusic
+    ports:
+      - ${Port_music}:3000
+    restart: unless-stopped
