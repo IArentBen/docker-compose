@@ -62,16 +62,14 @@ services:
      restart: ${restart}
 #streaming
   plex:
-    image: linuxserver/plex
+    image: ghcr.io/linuxserver/plex
     container_name: plex
     environment:
       - PUID=${id_user}
       - PGID=${id_group}
       - VERSION=docker
-      - VERSION=latest
-      - VIRTUAL_PORT=32400 
     volumes:
-      - ${appdata}/plex:/config 
+      - ${appdata}/plex:/config:rw
       - ${tv}:/tv 
       - ${movies}:/movies  
       - ${music}:/music 
@@ -86,7 +84,7 @@ services:
     restart: ${restart}
 #Cloud Service
   nextcloud:
-    image: linuxserver/nextcloud
+    image: ghcr.io/linuxserver/nextcloud
     container_name: nextcloud
     environment:
       - PUID=${id_user}
@@ -235,20 +233,6 @@ services:
       - ENV_VARIABLE_PREFIX="CFG_"
     tty: "true"
     stdin_open: true
-    restart: ${restart}
-#PODCAST
-  podgrab:
-    image: akhilrex/podgrab
-    container_name: podgrab
-    environment:
-      - CHECK_FREQUENCY=240
- #     - PASSWORD=${passwd_norm_user}     
- #      - username = podgrab
-    volumes:
-      - ${appdata}/podcast:/config
-      - ${podcasts}:/assets
-    ports:
-      - ${Port_podcast}:8080
     restart: ${restart}
 #Browser
   firefox:
@@ -411,21 +395,3 @@ services:
     environment:
       - FB_BASEURL=/filebrowser
     restart: always
-#Music
-  mstream:
-    image: ghcr.io/linuxserver/mstream
-    container_name: mstream
-    environment:
-      - PUID=${id_user}
-      - PGID=${id_group}
-      - USER=admin
-      - PASSWORD=${passwd_norm_user}
-      - USE_JSON=true/false
-      - TZ=${TZ}
-    volumes:
-      - ${appdata}/mstream:/config
-      - ${music}:/music
-      - ${kidmusic}:/kidsmusic
-    ports:
-      - ${Port_music}:3000
-    restart: unless-stopped
